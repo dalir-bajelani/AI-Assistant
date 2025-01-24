@@ -1,4 +1,10 @@
-import { Component, ViewChild, ElementRef, AfterViewChecked, inject } from '@angular/core';
+import {
+  Component,
+  ViewChild,
+  ElementRef,
+  AfterViewChecked,
+  inject,
+} from "@angular/core";
 import { bootstrapApplication } from "@angular/platform-browser";
 import { FormsModule } from "@angular/forms";
 import { CommonModule } from "@angular/common";
@@ -23,7 +29,11 @@ import { FormatResponsePipe } from "@shared/pipes/format-response.pipe";
         <div class="bg-white rounded-lg shadow-lg p-6">
           <div class="space-y-4">
             <!-- Conversation History -->
-            <div #conversationHistory class="h-96 overflow-y-auto space-y-4 mb-4 scrollbar-thin">
+            <div
+              #conversationHistory
+              class="h-96 overflow-y-auto space-y-4 mb-4 scrollbar-thin"
+              (scroll)="checkScrollPosition()"
+            >
               <div *ngFor="let message of messages" class="space-y-2">
                 <div *ngIf="message.role === 'user'" class="flex justify-end">
                   <div
@@ -79,8 +89,9 @@ import { FormatResponsePipe } from "@shared/pipes/format-response.pipe";
   `,
 })
 export class App implements AfterViewChecked {
-  @ViewChild('conversationHistory') private conversationHistory!: ElementRef;
+  @ViewChild("conversationHistory") private conversationHistory!: ElementRef;
   private apiService = inject(ApiService);
+  private shouldAutoScroll = true;
 
   prompt = "";
   messages: Message[] = [];
@@ -92,16 +103,26 @@ export class App implements AfterViewChecked {
   }
 
   private scrollToBottom(): void {
+    if (!this.shouldAutoScroll) return;
+
     try {
       if (this.conversationHistory) {
         setTimeout(() => {
-          this.conversationHistory.nativeElement.scrollTop = 
+          this.conversationHistory.nativeElement.scrollTop =
             this.conversationHistory.nativeElement.scrollHeight;
         }, 0);
       }
-    } catch(err) { 
-      console.error('Scroll error:', err); 
+    } catch (err) {
+      console.error("Scroll error:", err);
     }
+  }
+
+  checkScrollPosition(): void {
+    const element = this.conversationHistory.nativeElement;
+    const threshold = 100; // pixels from bottom
+    this.shouldAutoScroll =
+      element.scrollHeight - element.scrollTop - element.clientHeight <=
+      threshold;
   }
 
   sendPrompt() {
@@ -111,7 +132,7 @@ export class App implements AfterViewChecked {
     this.messages = [...this.messages, { content: this.prompt, role: "user" }];
 
     // Create empty assistant message for streaming
-    this.messages = [...this.messages, { content: '', role: 'assistant' }];
+    this.messages = [...this.messages, { content: "", role: "assistant" }];
 
     const originalPrompt = this.prompt;
     this.prompt = "";
@@ -122,9 +143,9 @@ export class App implements AfterViewChecked {
       next: (chunk) => {
         this.messages = this.messages.map((msg, index) => {
           if (index === this.messages.length - 1) {
-            return { 
-              ...msg, 
-              content: msg.content + chunk 
+            return {
+              ...msg,
+              content: msg.content + chunk,
             };
           }
           return msg;
@@ -139,6 +160,7 @@ export class App implements AfterViewChecked {
       },
       complete: () => {
         this.isLoading = false;
+        this.shouldAutoScroll = true;
       },
     });
   }
