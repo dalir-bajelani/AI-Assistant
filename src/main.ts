@@ -118,11 +118,7 @@ export class App implements AfterViewChecked {
   }
 
   checkScrollPosition(): void {
-    const element = this.conversationHistory.nativeElement;
-    const threshold = 100; // pixels from bottom
-    this.shouldAutoScroll =
-      element.scrollHeight - element.scrollTop - element.clientHeight <=
-      threshold;
+    this.shouldAutoScroll = false;
   }
 
   sendPrompt() {
