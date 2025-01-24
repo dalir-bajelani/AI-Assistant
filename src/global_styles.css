@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+  }
+
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+
+  .input-field {
+    @apply w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none;
+  }
+}
+
+.prose think {
+  @apply text-neutral-500 whitespace-pre-wrap m-0 pl-[13px] leading-[26px];
+}
+
+.conversation-history::-webkit-scrollbar-thumb {
+  transition: background 0.2s ease-in-out;
+}
+
+.conversation-history {
+  transition: scrollbar-color 0.2s ease-in-out;
+}
