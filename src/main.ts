@@ -1,10 +1,9 @@
-import { Component, inject } from "@angular/core";
+import { Component, ViewChild, ElementRef, AfterViewChecked, inject } from '@angular/core';
 import { bootstrapApplication } from "@angular/platform-browser";
 import { FormsModule } from "@angular/forms";
 import { CommonModule } from "@angular/common";
 import { ApiService } from "./app/services/api.service";
 import { Message } from "@shared/interfaces/message";
-import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 import { FormatResponsePipe } from "@shared/pipes/format-response.pipe";
 
 @Component({
@@ -24,7 +23,7 @@ import { FormatResponsePipe } from "@shared/pipes/format-response.pipe";
         <div class="bg-white rounded-lg shadow-lg p-6">
           <div class="space-y-4">
             <!-- Conversation History -->
-            <div class="h-96 overflow-y-auto space-y-4 mb-4 scrollbar-thin">
+            <div #conversationHistory class="h-96 overflow-y-auto space-y-4 mb-4 scrollbar-thin">
               <div *ngFor="let message of messages" class="space-y-2">
                 <div *ngIf="message.role === 'user'" class="flex justify-end">
                   <div
@@ -79,14 +78,31 @@ import { FormatResponsePipe } from "@shared/pipes/format-response.pipe";
     </div>
   `,
 })
-export class App {
+export class App implements AfterViewChecked {
+  @ViewChild('conversationHistory') private conversationHistory!: ElementRef;
   private apiService = inject(ApiService);
-  private sanitizer = inject(DomSanitizer);
 
   prompt = "";
   messages: Message[] = [];
   error = "";
   isLoading = false;
+
+  ngAfterViewChecked() {
+    this.scrollToBottom();
+  }
+
+  private scrollToBottom(): void {
+    try {
+      if (this.conversationHistory) {
+        setTimeout(() => {
+          this.conversationHistory.nativeElement.scrollTop = 
+            this.conversationHistory.nativeElement.scrollHeight;
+        }, 0);
+      }
+    } catch(err) { 
+      console.error('Scroll error:', err); 
+    }
+  }
 
   sendPrompt() {
     if (!this.prompt.trim() || this.isLoading) return;
@@ -113,6 +129,7 @@ export class App {
           }
           return msg;
         });
+        this.scrollToBottom();
       },
       error: (err) => {
         this.error = "An error occurred. Please try again.";
